@@ -13,6 +13,8 @@ public class RsARBackgroundRenderer : MonoBehaviour
     private Camera cam;
 #if !UNITY_2020_1_OR_NEWER
     private ARBackgroundRenderer bg;
+#else
+	private ARCamereBackground bg;
 #endif
     private Intrinsics intrinsics;
     private RenderTexture rt;
@@ -31,12 +33,16 @@ public class RsARBackgroundRenderer : MonoBehaviour
         cam = GetComponent<Camera>();
 
 #if !UNITY_2020_1_OR_NEWER
-        bg = new ARBackgroundRenderer()
-        {
-            backgroundMaterial = material,
-            mode = ARRenderMode.MaterialAsBackground,
-            backgroundTexture = material.mainTexture
-        };
+        bg = gameObject.AddComponent<ARBackgroundRenderer>();
+		bg.backgroundMaterial = material;
+        bg.mode = ARRenderMode.MaterialAsBackground;
+        bg.backgroundTexture = material.mainTexture;
+#else
+		bg = new ARCamereBackground()
+		{
+			customeMaterial = material,
+			useCustomMaterial = true,
+		}
 #endif
 
         cam.depthTextureMode |= DepthTextureMode.Depth;
@@ -49,7 +55,7 @@ public class RsARBackgroundRenderer : MonoBehaviour
         cam.AddCommandBuffer(CameraEvent.AfterDepthTexture, updateCamDepthTexture);
 
         // assume single directional light
-        var light = FindObjectOfType<Light>();
+        var light = FindFirstObjectOfType<Light>();
 
         // Copy resulting screenspace shadow map, ARBackgroundRenderer's material will multiply it over color image
         var copyScreenSpaceShadow = new CommandBuffer { name = "CopyScreenSpaceShadow" };
